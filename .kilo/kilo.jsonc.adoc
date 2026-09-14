@@ -1,0 +1,35 @@
+= Конфигурация Kilo Code проекта fs-lib-utils (`.kilo/kilo.jsonc`)
+
+Файл `kilo.jsonc` — проектная конфигурация Kilo Code. Секретов в проекте нет;
+при появлении внешних сервисов значения выносятся в переменные окружения
+пользователя и подставляются через шаблон `{env:VAR_NAME}`.
+
+== MCP-серверы
+
+[cols="3,1,2"]
+|===
+|Сервер |Тип |Назначение
+
+|`IntelliJ-BuiltIn`
+|remote
+|Встроенный MCP IntelliJ IDEA (`http://127.0.0.1:64342/sse`) — семантический поиск, call hierarchy, линт, дебаг.
+
+|`fetch-local`
+|local
+|Загрузка веб-страниц (`npx mcp-fetch-server`).
+
+|`duckduckgo-local`
+|local
+|Веб-поиск (`npx -y @oevortex/ddg_search@latest`).
+|===
+
+== Правила
+
+* `instructions` подключают `.kilo/rules/global-instructions.md` — единственный источник правил.
+* `permission.bash = allow` — Bash-команды выполняются без подтверждения.
+* Проектные скилы: `.kilo/skills/<name>/SKILL.md`.
+
+== Скилы
+
+Каталог `.kilo/skills/` пока пуст — добавляй скилы по мере необходимости
+(например, для новых CLI-команд или тестовых соглашений).

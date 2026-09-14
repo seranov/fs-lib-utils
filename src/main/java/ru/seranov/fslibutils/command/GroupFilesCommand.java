@@ -3,7 +3,7 @@ package ru.seranov.fslibutils.command;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import ru.seranov.fslibutils.grouping.FileGroupingStrategy;
+import ru.seranov.fslibutils.grouping.BatchGroupingStrategy;
 
 import java.io.IOException;
 import java.nio.file.*;
@@ -14,8 +14,8 @@ import java.util.stream.Stream;
  * CLI command: {@code group [--dir <path>] [--dry-run]}
  *
  * <p>Scans the target directory for regular files (non-recursive), resolves
- * a sub-folder name for each file using the configured
- * {@link FileGroupingStrategy} list, and moves the files into those
+ * sub-folder names using the configured {@link BatchGroupingStrategy} list
+ * (corpus-aware, applied to the whole file set), and moves the files into those
  * sub-folders.
  *
  * <p>Options:
@@ -29,7 +29,7 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 public class GroupFilesCommand implements CliCommand {
 
-    private final List<FileGroupingStrategy> strategies;
+    private final List<BatchGroupingStrategy> batchStrategies;
 
     @Override
     public String name() {
@@ -109,26 +109,25 @@ public class GroupFilesCommand implements CliCommand {
     // ---- helpers --------------------------------------------------------
 
     private Map<String, List<Path>> collectGroups(Path dir) {
-        Map<String, List<Path>> groups = new LinkedHashMap<>();
-        try (Stream<Path> stream = Files.list(dir)) {
-            stream.filter(Files::isRegularFile)
-                    .sorted(Comparator.comparing(p -> p.getFileName().toString()))
-                    .forEach(file -> resolveGroup(file).ifPresent(
-                            group -> groups.computeIfAbsent(group, k -> new ArrayList<>()).add(file)));
-        } catch (IOException e) {
-            log.error("Failed to list directory {}: {}", dir, e.getMessage());
-        }
-        return groups;
-    }
-
-    private Optional<String> resolveGroup(Path file) {
-        for (FileGroupingStrategy strategy : strategies) {
-            Optional<String> result = strategy.resolveGroup(file);
-            if (result.isPresent()) {
-                return result;
+        List<Path> files = listRegularFiles(dir);
+        for (BatchGroupingStrategy batchStrategy : batchStrategies) {
+            Map<String, List<Path>> groups = batchStrategy.group(files);
+            if (!groups.isEmpty()) {
+                return groups;
             }
         }
-        return Optional.empty();
+        return new LinkedHashMap<>();
+    }
+
+    private List<Path> listRegularFiles(Path dir) {
+        try (Stream<Path> stream = Files.list(dir)) {
+            return stream.filter(Files::isRegularFile)
+                    .sorted(Comparator.comparing(p -> p.getFileName().toString()))
+                    .toList();
+        } catch (IOException e) {
+            log.error("Failed to list directory {}: {}", dir, e.getMessage());
+            return List.of();
+        }
     }
 
     private ParsedArgs parseArgs(String[] args) {

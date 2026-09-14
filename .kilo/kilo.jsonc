@@ -1,0 +1,42 @@
+{
+  "$schema": "https://app.kilo.ai/config.json",
+
+  // Указываем плагину, откуда читать правила разработки
+  "instructions": [
+    "./.kilo/rules/global-instructions.md"
+  ],
+
+  "mcp": {
+    // Встроенный MCP-сервер IntelliJ
+    "IntelliJ-BuiltIn": {
+      "type": "remote",
+      "url": "http://127.0.0.1:64342/sse",
+      "enabled": true
+    },
+
+    // HTTP-фечер
+    "fetch-local": {
+      "type": "local",
+      "command": [
+        "npx",
+        "mcp-fetch-server"
+      ],
+      "enabled": true
+    },
+
+    // Веб-поиск DuckDuckGo
+    "duckduckgo-local": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@oevortex/ddg_search@latest"
+      ],
+      "enabled": true
+    }
+  },
+
+  "permission": {
+    "bash": "allow"
+  }
+}
